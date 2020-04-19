@@ -122,6 +122,11 @@ module Bluzelle
       api_query(url)["result"]["has"]
     end
 
+    def count()
+      url = "/crud/count/#{@options["uuid"]}"
+      api_query(url)["result"]["count"].to_i
+    end
+
     # mutate
 
     def create(key, value, lease: 0)

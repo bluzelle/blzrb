@@ -52,4 +52,11 @@ describe "methods" do
     b = @client.has(@key1)
     expect(b).to be_truthy
   end
+
+  it "counts", :type => :feature do
+    num = @client.count()
+    @client.create(@key1, @value1)
+    num2 = @client.count()
+    expect(num+1).to eq(num2)
+  end
 end
