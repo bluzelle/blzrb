@@ -144,6 +144,53 @@ describe "methods" do
   end
 
   #
+  
+  it "tx reads key", :type => :feature do
+    @client.create @key1, @value1
+    value = @client.tx_read @key1
+    expect(value).to eq(@value1)
+  end
 
+  it "tx checks has key", :type => :feature do
+    @client.create(@key1, @value1)
+    b = @client.tx_has(@key1)
+    expect(b).to be_truthy
+  end
 
+  it "tx counts keys in uuid", :type => :feature do
+    num = @client.count()
+    @client.create(@key1, @value1)
+    num2 = @client.tx_count()
+    expect(num+1).to eq(num2)
+  end
+
+  it "tx reads keys in uuid", :type => :feature do
+    keys = @client.tx_keys()
+    expect(keys).to_not include(@key1)
+    @client.create(@key1, @value1)
+    keys = @client.tx_keys()
+    expect(keys).to include(@key1)
+  end
+
+  it "tx reads keyvalues in uuid", :type => :feature do
+    key_values = key_values_to_dict(@client.tx_key_values())
+    expect(key_values).to_not have_key(@key1)
+    @client.create(@key1, @value1)
+    key_values = key_values_to_dict(@client.tx_key_values())
+    expect(key_values[@key1]).to eq(@value1)
+  end
+
+  it "tx reads key lease", :type => :feature do
+    @client.create(@key1, @value1, lease: @lease1)
+    lease = @client.tx_get_lease(@key1)
+    expect(lease).to be <= @lease1
+  end
+
+  it "tx reads n shortest key leases", :type => :feature do
+    @client.create(@key1, @value1, lease: @lease1)
+    @client.create(@key2, @value1, lease: @lease1)
+    @client.create(@key3, @value1, lease: @lease1)
+    keyleases = @client.tx_get_n_shortest_leases(2)
+    expect(keyleases.size).to eq(2)
+  end
 end

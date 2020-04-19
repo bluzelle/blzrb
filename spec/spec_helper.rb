@@ -1,3 +1,4 @@
+require 'rspec/retry'
 require 'dotenv'
 require_relative "../lib/bluzelle"
 
@@ -29,4 +30,10 @@ def key_values_to_dict key_values
     ret[key_value['key']] = key_value['value']
   end
   ret
+end
+
+RSpec.configure do |config|
+  config.around :each, :type => :feature do |example|
+    example.run_with_retry :retry => 3
+  end
 end

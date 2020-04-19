@@ -197,6 +197,43 @@ module Bluzelle
 
     #
 
+    def tx_read(key)
+      res = send_transaction("post", "/crud/read", {"Key" => key})
+      res["value"]
+    end
+
+    def tx_has(key)
+      res = send_transaction("post", "/crud/has", {"Key" => key})
+      res["has"]
+    end
+
+    def tx_count()
+      res = send_transaction("post", "/crud/count", {})
+      res["count"].to_i
+    end
+
+    def tx_keys()
+      res = send_transaction("post", "/crud/keys", {})
+      res["keys"]
+    end
+
+    def tx_key_values()
+      res = send_transaction("post", "/crud/keyvalues", {})
+      res["keyvalues"]
+    end
+
+    def tx_get_lease(key)
+      res = send_transaction("post", "/crud/getlease", {"Key" => key})
+      res["lease"].to_i
+    end
+
+    def tx_get_n_shortest_leases(n)
+      res = send_transaction("post", "/crud/getnshortestlease", {"N" => n.to_s})
+      res["keyleases"]
+    end
+
+    #
+
     def api_query(endpoint)
       url = @options['endpoint'] + endpoint
       @logger.debug("querying url(#{url})...")
@@ -283,10 +320,18 @@ module Bluzelle
 
       payload = { 'mode' => 'block', 'tx' => txn }
       response = api_mutate('post', TX_COMMAND, payload)
+
+      # https://github.com/bluzelle/blzjs/blob/45fe51f6364439fa88421987b833102cc9bcd7c0/src/swarmClient/cosmos.js#L240-L246
+      # note - as of right now (3/6/20) the responses returned by the Cosmos REST interface now look like this:
+      # success case: {"height":"0","txhash":"3F596D7E83D514A103792C930D9B4ED8DCF03B4C8FD93873AB22F0A707D88A9F","raw_log":"[]"}
+      # failure case: {"height":"0","txhash":"DEE236DEF1F3D0A92CB7EE8E442D1CE457EE8DB8E665BAC1358E6E107D5316AA","code":4,
+      #  "raw_log":"unauthorized: signature verification failed; verify correct account sequence and chain-id"}
+      #
+      # this is far from ideal, doesn't match their docs, and is probably going to change (again) in the future.
       unless response.fetch('code', nil)
         @account['sequence'] += 1
         if response.fetch('data', nil)
-          return [response['data']].pack('H*')
+          return JSON.parse [response['data']].pack('H*')
         end
         return
       end
