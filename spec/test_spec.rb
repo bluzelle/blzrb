@@ -75,4 +75,14 @@ describe "methods" do
     key_values = key_values_to_dict(@client.key_values())
     expect(key_values[@key1]).to eq(@value1)
   end
+
+  it "delete_all", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.create(@key2, @value1)
+    @client.read(@key1)
+    @client.read(@key1)
+    @client.delete_all()
+    num = @client.count()
+    expect(num).to eq(0)
+  end
 end
