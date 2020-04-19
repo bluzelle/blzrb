@@ -70,13 +70,11 @@ class Bluzelle
     set_account
   end
 
+  # query
+
   def read_account
     url = "/auth/accounts/#{@options['address']}"
     api_query(url)['result']['value']
-  end
-
-  def create(key, value, lease: 0)
-    send_transaction('post', '/crud/create', { 'Key' => key, 'Lease' => lease.to_s, 'Value' => value })
   end
 
   def read(key)
@@ -88,6 +86,18 @@ class Bluzelle
     url = "/crud/pread/#{@options["uuid"]}/#{key}"
     api_query(url)["result"]["value"]
   end
+
+  # mutate
+
+  def create(key, value, lease: 0)
+    send_transaction('post', '/crud/create', { 'Key' => key, 'Lease' => lease.to_s, 'Value' => value })
+  end
+
+  def update(key, value, lease: 0)
+    send_transaction("post", "/crud/update", {"Key" => key, "Lease" => lease.to_s, "Value" => value})
+  end
+
+  #
 
   def api_query(endpoint)
     url = @options['endpoint'] + endpoint
@@ -139,8 +149,6 @@ class Bluzelle
   end
 
   def broadcast_transaction(data)
-    @logger.warn("#{data}")
-
     # fee
     fee = data['fee']
     fee_gas = fee['gas'].to_i
@@ -192,6 +200,7 @@ class Bluzelle
       sleep BROADCAST_RETRY_INTERVAL_SECONDS
       set_account()
       broadcast_transaction(txn)
+      return
     end
 
     raise APIError, raw_log

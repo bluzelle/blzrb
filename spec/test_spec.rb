@@ -24,4 +24,12 @@ describe "methods" do
     value = @client.read @key1
     expect(value).to eq(@value1)
   end
+
+  it "updates", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.update(@key1, @value2)
+    value = @client.read(@key1)
+    expect(value).to eq(@value2)
+    expect(value).to_not eq(@value1)
+  end
 end
