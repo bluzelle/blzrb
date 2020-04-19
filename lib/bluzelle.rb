@@ -134,6 +134,10 @@ module Bluzelle
       send_transaction("delete", "/crud/delete", {"Key" => key})
     end
 
+    def rename(key, new_key)
+      send_transaction("post", "/crud/rename", {"Key" => key, "NewKey" => new_key})
+    end
+
     #
 
     def api_query(endpoint)

@@ -38,4 +38,12 @@ describe "methods" do
     @client.delete(@key1)
     expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
   end
+
+  it "renames", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.rename(@key1, @key2)
+    value = @client.read(@key2)
+    expect(value).to eq(@value1)
+    expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
+  end
 end
