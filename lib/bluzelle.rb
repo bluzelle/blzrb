@@ -79,6 +79,16 @@ class Bluzelle
     send_transaction('post', '/crud/create', { 'Key' => key, 'Lease' => lease.to_s, 'Value' => value })
   end
 
+  def read(key)
+    url = "/crud/read/#{@options["uuid"]}/#{key}"
+    api_query(url)["result"]["value"]
+  end
+
+  def proven_read(key)
+    url = "/crud/pread/#{@options["uuid"]}/#{key}"
+    api_query(url)["result"]["value"]
+  end
+
   def api_query(endpoint)
     url = @options['endpoint'] + endpoint
     @logger.debug("querying url(#{url})...")
@@ -129,6 +139,8 @@ class Bluzelle
   end
 
   def broadcast_transaction(data)
+    @logger.warn("#{data}")
+
     # fee
     fee = data['fee']
     fee_gas = fee['gas'].to_i
@@ -187,12 +199,12 @@ class Bluzelle
 
   def sign_transaction(txn)
     payload = {
-      'account_number': @account['account_number'].to_s,
-      'chain_id': @options['chain_id'],
-      'fee': txn['fee'],
-      'memo': txn['memo'],
-      'msgs': txn['msg'],
-      'sequence': @account['sequence'].to_s
+      'account_number' => @account['account_number'].to_s,
+      'chain_id' => @options['chain_id'],
+      'fee' => txn['fee'],
+      'memo' => txn['memo'],
+      'msgs' => txn['msg'],
+      'sequence' => @account['sequence'].to_s
     }
     payload = Bluzelle.json_dumps(payload)
 
@@ -209,17 +221,17 @@ class Bluzelle
     fee_amount = fee['amount'][0]
     txn = {
       'fee' => {
-        "amount": [
+        "amount" => [
           {
-            "amount": fee_amount['amount'],
-            "denom": fee_amount['denom']
+            "amount" => fee_amount['amount'],
+            "denom" => fee_amount['denom']
           }
         ],
-        "gas": fee['gas']
+        "gas" => fee['gas']
       },
       'memo' => Bluzelle.make_random_string(32)
     }
-    msg_value = msg.fetch('value', {})
+    msg_value = msg['value']
     new_msg_value = {}
     MSG_KEYS_ORDER.each do |key|
       val = msg_value.fetch(key, nil)
@@ -227,8 +239,8 @@ class Bluzelle
     end
     txn['msg'] = [
       {
-        "type": msg['type'],
-        "value": new_msg_value
+        "type" => msg['type'],
+        "value" => new_msg_value
       }
     ]
     txn

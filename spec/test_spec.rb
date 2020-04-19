@@ -18,4 +18,10 @@ describe "methods" do
   it "creates", :type => :feature do
     @client.create @key1, @value1
   end
+
+  it "reads", :type => :feature do
+    @client.create @key1, @value1
+    value = @client.read @key1
+    expect(value).to eq(@value1)
+  end
 end
