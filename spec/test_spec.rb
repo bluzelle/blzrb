@@ -103,4 +103,9 @@ describe "methods" do
     account = @client.read_account()
     expect(account['address']).to eq(ADDRESS)
   end
+
+  it "reads version", :type => :feature do
+    version = @client.version()
+    expect(version).to_not be_nil
+  end
 end

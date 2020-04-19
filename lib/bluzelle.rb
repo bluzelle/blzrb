@@ -137,6 +137,11 @@ module Bluzelle
       api_query(url)["result"]["keyvalues"]
     end
 
+    def version()
+      url = "/node_info"
+      api_query(url)["application_version"]["version"]
+    end
+
     # mutate
 
     def create(key, value, lease: 0)
