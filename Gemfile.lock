@@ -1,0 +1,55 @@
+GIT
+  remote: git@github.com:cryptape/ruby-bitcoin-secp256k1
+  revision: e2f47bcc9e85b4d52eeaf4f7649a9a25b0083a11
+  specs:
+    bitcoin-secp256k1 (0.5.2)
+      ffi (>= 1.9.25)
+
+GIT
+  remote: https://github.com/vbstreetz/money-tree
+  revision: 244549cbc855b65c4a003ae1b089a0adc793f482
+  specs:
+    money-tree (0.10.0)
+      ffi
+
+PATH
+  remote: .
+  specs:
+    bluzelle (0.1.0)
+      bip_mnemonic (~> 0.0.4)
+      ecdsa (~> 1.2.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    bip_mnemonic (0.0.4)
+    diff-lcs (1.3)
+    dotenv (2.7.5)
+    ecdsa (1.2.0)
+    ffi (1.12.2)
+    rspec (3.9.0)
+      rspec-core (~> 3.9.0)
+      rspec-expectations (~> 3.9.0)
+      rspec-mocks (~> 3.9.0)
+    rspec-core (3.9.1)
+      rspec-support (~> 3.9.1)
+    rspec-expectations (3.9.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.9.0)
+    rspec-mocks (3.9.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.9.0)
+    rspec-support (3.9.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bitcoin-secp256k1!
+  bluzelle!
+  dotenv
+  money-tree!
+  rspec
+
+BUNDLED WITH
+   2.1.4
