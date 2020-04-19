@@ -331,7 +331,7 @@ module Bluzelle
       unless response.fetch('code', nil)
         @account['sequence'] += 1
         if response.fetch('data', nil)
-          return JSON.parse [response['data']].pack('H*')
+          return JSON.parse Bluzelle::hex_to_ascii response['data']
         end
         return
       end
@@ -388,15 +388,15 @@ module Bluzelle
         'memo' => Bluzelle::make_random_string(32)
       }
       msg_value = msg['value']
-      new_msg_value = {}
+      sorted_msg_value = {}
       MSG_KEYS_ORDER.each do |key|
         val = msg_value.fetch(key, nil)
-        new_msg_value[key] = val if val
+        sorted_msg_value[key] = val if val
       end
       txn['msg'] = [
         {
           "type" => msg['type'],
-          "value" => new_msg_value
+          "value" => sorted_msg_value
         }
       ]
       txn
@@ -419,6 +419,10 @@ module Bluzelle
   def self.bin_to_hex(b)
     Secp256k1::Utils.encode_hex b
   end
+
+  def self.hex_to_ascii(h)
+    [h].pack('H*')
+   end
 
   def self.make_random_string(size)
     SecureRandom.alphanumeric size
