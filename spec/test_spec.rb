@@ -15,14 +15,22 @@ describe "methods" do
     example.run
   end
 
-  it "creates key", :type => :feature do
-    @client.create @key1, @value1
+  #
+
+  it "reads account", :type => :feature do
+    account = @client.read_account()
+    expect(account['address']).to eq(ADDRESS)
   end
 
-  it "reads key", :type => :feature do
+  it "reads version", :type => :feature do
+    version = @client.version()
+    expect(version).to_not be_nil
+  end
+
+  #
+
+  it "creates key", :type => :feature do
     @client.create @key1, @value1
-    value = @client.read @key1
-    expect(value).to eq(@value1)
   end
 
   it "updates key", :type => :feature do
@@ -45,6 +53,51 @@ describe "methods" do
     value = @client.read(@key2)
     expect(value).to eq(@value1)
     expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
+  end
+
+  it "deletes all keys in uuid", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.create(@key2, @value1)
+    @client.read(@key1)
+    @client.read(@key1)
+    @client.delete_all()
+    num = @client.count()
+    expect(num).to eq(0)
+  end
+
+  it "multi updates keys", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.create(@key2, @value1)
+    #
+    data = {}
+    data[@key1] = @key1
+    data[@key2] = @key2
+    @client.multi_update(data)
+    #
+    expect(@client.read(@key1)).to eq(@key1)
+    expect(@client.read(@key2)).to eq(@key2)
+  end
+
+  it "renews key lease", :type => :feature do
+    @client.create(@key1, @value1, lease: @lease1)
+    @client.renew_lease(@key1, @lease2)
+    lease = @client.get_lease(@key1)
+    expect(lease).to be > @lease1
+  end
+
+  it "renews all key leases in uuid", :type => :feature do
+    @client.create(@key1, @value1, lease: @lease1)
+    @client.renew_all_leases(@lease2)
+    lease = @client.get_lease(@key1)
+    expect(lease).to be > @lease1
+  end
+
+  #
+
+  it "reads key", :type => :feature do
+    @client.create @key1, @value1
+    value = @client.read @key1
+    expect(value).to eq(@value1)
   end
 
   it "checks has key", :type => :feature do
@@ -76,36 +129,21 @@ describe "methods" do
     expect(key_values[@key1]).to eq(@value1)
   end
 
-  it "deletes all keys in uuid", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.create(@key2, @value1)
-    @client.read(@key1)
-    @client.read(@key1)
-    @client.delete_all()
-    num = @client.count()
-    expect(num).to eq(0)
+  it "reads key lease", :type => :feature do
+    @client.create(@key1, @value1, lease: @lease1)
+    lease = @client.get_lease(@key1)
+    expect(lease).to be <= @lease1
   end
 
-  it "multi updates keys", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.create(@key2, @value1)
-    #
-    data = {}
-    data[@key1] = @key1
-    data[@key2] = @key2
-    @client.multi_update(data)
-    #
-    expect(@client.read(@key1)).to eq(@key1)
-    expect(@client.read(@key2)).to eq(@key2)
+  it "reads n shortest key leases", :type => :feature do
+    @client.create(@key1, @value1, lease: @lease1)
+    @client.create(@key2, @value1, lease: @lease1)
+    @client.create(@key3, @value1, lease: @lease1)
+    keyleases = @client.get_n_shortest_leases(2)
+    expect(keyleases.size).to eq(2)
   end
 
-  it "reads account", :type => :feature do
-    account = @client.read_account()
-    expect(account['address']).to eq(ADDRESS)
-  end
+  #
 
-  it "reads version", :type => :feature do
-    version = @client.version()
-    expect(version).to_not be_nil
-  end
+
 end

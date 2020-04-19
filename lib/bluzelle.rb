@@ -100,41 +100,11 @@ module Bluzelle
       @account = read_account
     end
 
-    # query
+    #
 
     def read_account
       url = "/auth/accounts/#{@options['address']}"
       api_query(url)['result']['value']
-    end
-
-    def read(key)
-      url = "/crud/read/#{@options["uuid"]}/#{key}"
-      api_query(url)["result"]["value"]
-    end
-
-    def proven_read(key)
-      url = "/crud/pread/#{@options["uuid"]}/#{key}"
-      api_query(url)["result"]["value"]
-    end
-
-    def has(key)
-      url = "/crud/has/#{@options["uuid"]}/#{key}"
-      api_query(url)["result"]["has"]
-    end
-
-    def count()
-      url = "/crud/count/#{@options["uuid"]}"
-      api_query(url)["result"]["count"].to_i
-    end
-
-    def keys()
-      url = "/crud/keys/#{@options["uuid"]}"
-      api_query(url)["result"]["keys"]
-    end
-
-    def key_values()
-      url = "/crud/keyvalues/#{@options["uuid"]}"
-      api_query(url)["result"]["keyvalues"]
     end
 
     def version()
@@ -173,6 +143,56 @@ module Bluzelle
         list.append({"key" => key, "value" => value})
       end
       send_transaction("post", "/crud/multiupdate", {"KeyValues" => list})
+    end
+
+    def renew_lease(key, lease)
+      send_transaction("post", "/crud/renewlease", {"Key" => key, "Lease" => lease.to_s})
+    end
+
+    def renew_all_leases(lease)
+      send_transaction("post", "/crud/renewleaseall", {"Lease" => lease.to_s})
+    end
+
+    # query
+
+    def read(key)
+      url = "/crud/read/#{@options["uuid"]}/#{key}"
+      api_query(url)["result"]["value"]
+    end
+
+    def proven_read(key)
+      url = "/crud/pread/#{@options["uuid"]}/#{key}"
+      api_query(url)["result"]["value"]
+    end
+
+    def has(key)
+      url = "/crud/has/#{@options["uuid"]}/#{key}"
+      api_query(url)["result"]["has"]
+    end
+
+    def count()
+      url = "/crud/count/#{@options["uuid"]}"
+      api_query(url)["result"]["count"].to_i
+    end
+
+    def keys()
+      url = "/crud/keys/#{@options["uuid"]}"
+      api_query(url)["result"]["keys"]
+    end
+
+    def key_values()
+      url = "/crud/keyvalues/#{@options["uuid"]}"
+      api_query(url)["result"]["keyvalues"]
+    end
+
+    def get_lease(key)
+      url = "/crud/getlease/#{@options["uuid"]}/#{key}"
+      api_query(url)["result"]["lease"].to_i
+    end
+
+    def get_n_shortest_leases(n)
+      url = "/crud/getnshortestlease/#{@options["uuid"]}/#{n}"
+      api_query(url)["result"]["keyleases"]
     end
 
     #
