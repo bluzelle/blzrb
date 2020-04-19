@@ -23,7 +23,7 @@ $ bundle install
 ```ruby
 require "bluzelle"
 
-client = Bluzelle.new({
+client = Bluzelle::new_client({
   "address" =>  "...",
   "mnemonic" => "...",
   "uuid" => "bluzelle",
@@ -33,10 +33,9 @@ client = Bluzelle.new({
   },
 })
 
-key = "foo"
-value = "bar"
+key = 'foo'
 
-client.create 'foo', 'bar'
+client.create key, 'bar'
 value = client.read key
 client.update key, 'baz'
 client.delete key

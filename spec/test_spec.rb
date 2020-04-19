@@ -32,4 +32,10 @@ describe "methods" do
     expect(value).to eq(@value2)
     expect(value).to_not eq(@value1)
   end
+
+  it "deletes", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.delete(@key1)
+    expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
+  end
 end

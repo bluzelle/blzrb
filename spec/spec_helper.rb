@@ -8,7 +8,7 @@ def debug
 end
 
 def new_client
-  Bluzelle.new({
+  Bluzelle::new_client({
     "address" =>  ENV.fetch("ADDRESS", nil),
     "mnemonic" => ENV.fetch("MNEMONIC", nil),
     "uuid" =>     ENV.fetch("UUID", nil),
