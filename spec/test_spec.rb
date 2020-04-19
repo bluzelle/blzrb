@@ -59,4 +59,12 @@ describe "methods" do
     num2 = @client.count()
     expect(num+1).to eq(num2)
   end
+
+  it "keys", :type => :feature do
+    keys = @client.keys()
+    expect(keys).to_not include(@key1)
+    @client.create(@key1, @value1)
+    keys = @client.keys()
+    expect(keys).to include(@key1)
+  end
 end
