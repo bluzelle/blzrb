@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.homepage    = 'https://rubygemspec.org/gems/bluzelle'
   spec.license     = 'MIT'
 
-  # spec.add_dependency "money-tree"
-  # spec.add_dependency "secp256k1"
+#   spec.add_dependency "money-tree"
+#   spec.add_dependency "secp256k1"
   spec.add_dependency "ecdsa", "~> 1.2.0"
   spec.add_dependency "bip_mnemonic", "~> 0.0.4"
 

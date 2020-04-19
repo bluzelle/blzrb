@@ -9,7 +9,9 @@ Ensure you have a recent version of [Ruby](https://www.ruby-lang.org/en/) instal
 2. Add the gem to your Gemfile:
 
 ```
-$ gem 'bluzelle', git: 'git@github.com:vbstreetz/bluzelle'
+gem 'money-tree', git: 'https://github.com/vbstreetz/money-tree'
+gem 'bitcoin-secp256k1', git: 'git@github.com:cryptape/ruby-bitcoin-secp256k1'
+gem 'bluzelle', git: 'https://github.com/vbstreetz/blzrb'
 ```
 
 3. Then install:
