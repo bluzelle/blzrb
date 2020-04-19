@@ -85,4 +85,17 @@ describe "methods" do
     num = @client.count()
     expect(num).to eq(0)
   end
+
+  it "multi_update", :type => :feature do
+    @client.create(@key1, @value1)
+    @client.create(@key2, @value1)
+    #
+    data = {}
+    data[@key1] = @key1
+    data[@key2] = @key2
+    @client.multi_update(data)
+    #
+    expect(@client.read(@key1)).to eq(@key1)
+    expect(@client.read(@key2)).to eq(@key2)
+  end
 end

@@ -162,6 +162,14 @@ module Bluzelle
       send_transaction("post", "/crud/deleteall", {})
     end
 
+    def multi_update(payload)
+      list = []
+      payload.each do |key, value|
+        list.append({"key" => key, "value" => value})
+      end
+      send_transaction("post", "/crud/multiupdate", {"KeyValues" => list})
+    end
+
     #
 
     def api_query(endpoint)
