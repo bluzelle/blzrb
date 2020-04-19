@@ -67,4 +67,12 @@ describe "methods" do
     keys = @client.keys()
     expect(keys).to include(@key1)
   end
+
+  it "key_values", :type => :feature do
+    key_values = key_values_to_dict(@client.key_values())
+    expect(key_values).to_not have_key(@key1)
+    @client.create(@key1, @value1)
+    key_values = key_values_to_dict(@client.key_values())
+    expect(key_values[@key1]).to eq(@value1)
+  end
 end

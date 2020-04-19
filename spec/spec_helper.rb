@@ -20,3 +20,11 @@ def new_client
     "debug" => debug,
   })
 end
+
+def key_values_to_dict key_values
+  ret = {}
+  key_values.each do |key_value|
+    ret[key_value['key']] = key_value['value']
+  end
+  ret
+end
