@@ -117,6 +117,11 @@ module Bluzelle
       api_query(url)["result"]["value"]
     end
 
+    def has(key)
+      url = "/crud/has/#{@options["uuid"]}/#{key}"
+      api_query(url)["result"]["has"]
+    end
+
     # mutate
 
     def create(key, value, lease: 0)

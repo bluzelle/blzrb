@@ -46,4 +46,10 @@ describe "methods" do
     expect(value).to eq(@value1)
     expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
   end
+
+  it "has", :type => :feature do
+    @client.create(@key1, @value1)
+    b = @client.has(@key1)
+    expect(b).to be_truthy
+  end
 end
