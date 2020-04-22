@@ -6,5 +6,11 @@ example:
 test:
 	@bundle exec rspec --format documentation $(o)
 
+deploy:
+	@gem build bluzelle.gemspec
+	@gem push *.gem
+	@rm -f *.gem
+
 .PHONY: example \
-	test
+	test \
+	deploy
