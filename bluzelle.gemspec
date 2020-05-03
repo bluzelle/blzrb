@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name        = 'bluzelle'
-  spec.version     = '0.1.0'
+  spec.version     = '0.1.1'
   spec.date        = '2020-04-20'
   spec.summary     = "Ruby gem client library for the Bluzelle Service"
   spec.description = "Ruby gem client library for the Bluzelle Service"
