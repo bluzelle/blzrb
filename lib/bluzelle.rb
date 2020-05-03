@@ -44,20 +44,7 @@ module Bluzelle
     raise OptionsError, 'address is required' unless options.fetch('address', nil)
     raise OptionsError, 'mnemonic is required' unless options.fetch('mnemonic', nil)
 
-    gas_info = options.fetch('gas_info', {})
-    unless gas_info.class.equal?(Hash)
-      raise OptionsError, 'gas_info should be a hash of {gas_price, max_fee, max_gas}'
-    end
-
-    gas_info_keys = %w[gas_price max_fee max_gas]
-    gas_info_keys.each do |k|
-      v = gas_info.fetch(k, 0)
-      unless v.class.equal?(Integer)
-        raise OptionsError, "gas_info[#{k}] should be an int"
-      end
-
-      gas_info[k] = v
-    end
+    Bluzelle::validate_gas_info options.fetch('gas_info', {})
 
     options['debug'] = false unless options.fetch('debug', false)
     options['chain_id'] = DEFAULT_CHAIN_ID unless options.fetch('chain_id', nil)
@@ -115,46 +102,83 @@ module Bluzelle
 
     # mutate
 
-    def create(key, value, lease_info: nil)
+    def create(key, value, lease_info: nil, gas_info: nil)
       payload = {"Key" => key}
       payload["Lease"] = Bluzelle::lease_info_to_blocks(lease_info).to_s if lease_info
       payload["Value"] = value
-      send_transaction('post', '/crud/create', payload)
+      send_transaction(
+        'post',
+        '/crud/create',
+        payload,
+        gas_info: gas_info
+      )
     end
 
-    def update(key, value, lease_info: nil)
+    def update(key, value, lease_info: nil, gas_info: nil)
       payload = {"Key" => key}
       payload["Lease"] = Bluzelle::lease_info_to_blocks(lease_info).to_s if lease_info
       payload["Value"] = value
-      send_transaction("post", "/crud/update", payload)
+      send_transaction(
+        "post",
+        "/crud/update",
+        payload,
+        gas_info: gas_info
+      )
     end
 
-    def delete(key)
-      send_transaction("delete", "/crud/delete", {"Key" => key})
+    def delete(key, gas_info: nil)
+      send_transaction(
+        "delete",
+        "/crud/delete",
+        {"Key" => key},
+        gas_info: gas_info
+      )
     end
 
-    def rename(key, new_key)
-      send_transaction("post", "/crud/rename", {"Key" => key, "NewKey" => new_key})
+    def rename(key, new_key, gas_info: nil)
+      send_transaction(
+        "post",
+        "/crud/rename",
+        {"Key" => key, "NewKey" => new_key},
+        gas_info: gas_info
+      )
     end
 
-    def delete_all()
-      send_transaction("post", "/crud/deleteall", {})
+    def delete_all(gas_info: nil)
+      send_transaction(
+        "post",
+        "/crud/deleteall",
+        {},
+        gas_info: gas_info
+      )
     end
 
-    def multi_update(payload)
+    def multi_update(payload, gas_info: nil)
       list = []
       payload.each do |key, value|
         list.append({"key" => key, "value" => value})
       end
-      send_transaction("post", "/crud/multiupdate", {"KeyValues" => list})
+      send_transaction(
+        "post",
+        "/crud/multiupdate", {"KeyValues" => list},
+        gas_info: gas_info
+      )
     end
 
-    def renew_lease(key, lease_info)
-      send_transaction("post", "/crud/renewlease", {"Key" => key, "Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s})
+    def renew_lease(key, lease_info, gas_info: nil)
+      send_transaction(
+        "post", "/crud/renewlease",
+        {"Key" => key, "Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s},
+        gas_info: gas_info
+      )
     end
 
-    def renew_all_leases(lease_info)
-      send_transaction("post", "/crud/renewleaseall", {"Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s})
+    def renew_all_leases(lease_info, gas_info: nil)
+      send_transaction(
+        "post", "/crud/renewleaseall",
+        {"Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s},
+        gas_info: gas_info
+      )
     end
 
     # query
@@ -205,38 +229,38 @@ module Bluzelle
 
     #
 
-    def tx_read(key)
-      res = send_transaction("post", "/crud/read", {"Key" => key})
+    def tx_read(key, gas_info: nil)
+      res = send_transaction("post", "/crud/read", {"Key" => key}, gas_info: gas_info)
       res["value"]
     end
 
-    def tx_has(key)
-      res = send_transaction("post", "/crud/has", {"Key" => key})
+    def tx_has(key, gas_info: nil)
+      res = send_transaction("post", "/crud/has", {"Key" => key}, gas_info: gas_info)
       res["has"]
     end
 
-    def tx_count()
-      res = send_transaction("post", "/crud/count", {})
+    def tx_count(gas_info: nil)
+      res = send_transaction("post", "/crud/count", {}, gas_info: gas_info)
       res["count"].to_i
     end
 
-    def tx_keys()
-      res = send_transaction("post", "/crud/keys", {})
+    def tx_keys(gas_info: nil)
+      res = send_transaction("post", "/crud/keys", {}, gas_info: gas_info)
       res["keys"]
     end
 
-    def tx_key_values()
-      res = send_transaction("post", "/crud/keyvalues", {})
+    def tx_key_values(gas_info: nil)
+      res = send_transaction("post", "/crud/keyvalues", {}, gas_info: gas_info)
       res["keyvalues"]
     end
 
-    def tx_get_lease(key)
-      res = send_transaction("post", "/crud/getlease", {"Key" => key})
+    def tx_get_lease(key, gas_info: nil)
+      res = send_transaction("post", "/crud/getlease", {"Key" => key}, gas_info: gas_info)
       Bluzelle::lease_blocks_to_seconds res["lease"].to_i
     end
 
-    def tx_get_n_shortest_leases(n)
-      res = send_transaction("post", "/crud/getnshortestleases", {"N" => n.to_s})
+    def tx_get_n_shortest_leases(n, gas_info: nil)
+      res = send_transaction("post", "/crud/getnshortestleases", {"N" => n.to_s}, gas_info: gas_info)
       kls = res["keyleases"]
       kls.each do |kl|
         kl["lease"] = Bluzelle::lease_blocks_to_seconds kl["lease"]
@@ -280,10 +304,10 @@ module Bluzelle
       data
     end
 
-    def send_transaction(method, endpoint, payload)
+    def send_transaction(method, endpoint, payload, gas_info: nil)
       @broadcast_retries = 0
       txn = validate_transaction(method, endpoint, payload)
-      broadcast_transaction(txn)
+      broadcast_transaction(txn, gas_info: gas_info)
     end
 
     def validate_transaction(method, endpoint, payload)
@@ -299,11 +323,17 @@ module Bluzelle
       api_mutate(method, endpoint, payload)['value']
     end
 
-    def broadcast_transaction(data)
+    def broadcast_transaction(data, gas_info: nil)
       # fee
       fee = data['fee']
       fee_gas = fee['gas'].to_i
-      gas_info = @options['gas_info']
+      if gas_info == nil
+        gas_info = @options['gas_info']
+      end
+      if gas_info == nil
+        raise OptionsError, 'please provide gas_info when initializing the client or in the transaction'
+      end
+      Bluzelle::validate_gas_info gas_info
       if gas_info['max_gas'] != 0 && fee_gas > gas_info['max_gas']
         fee['gas'] = gas_info['max_gas'].to_s
       end
@@ -358,7 +388,7 @@ module Bluzelle
 
         sleep BROADCAST_RETRY_INTERVAL_SECONDS
         set_account()
-        broadcast_transaction(txn)
+        broadcast_transaction(txn, gas_info: gas_info)
         return
       end
 
@@ -488,5 +518,22 @@ module Bluzelle
 
   def self.lease_blocks_to_seconds(blocks)
     blocks * BLOCK_TIME_IN_SECONDS
+  end
+
+  def self.validate_gas_info gas_info
+    unless gas_info.class.equal?(Hash)
+      raise OptionsError, 'gas_info should be a hash of {gas_price, max_fee, max_gas}'
+    end
+
+    gas_info_keys = %w[gas_price max_fee max_gas]
+    gas_info_keys.each do |k|
+      v = gas_info.fetch(k, 0)
+      unless v.class.equal?(Integer)
+        raise OptionsError, "gas_info[#{k}] should be an int"
+      end
+
+      gas_info[k] = v
+    end
+    gas_info
   end
 end

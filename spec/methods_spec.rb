@@ -39,6 +39,15 @@ describe "methods" do
     }
   end
 
+  it "creates key with custom gas info", :type => :feature do
+    @client.create @key1, @value1, gas_info: {
+      "max_fee" => 1000000000
+    }
+    expect { @client.create @key2, @value1, gas_info: {
+      "max_fee" => 1
+    } }.to raise_error(Bluzelle::APIError, "insufficient fee: insufficient fees; got: 1ubnt required: 2000000ubnt")
+  end
+
   it "updates key", :type => :feature do
     @client.create(@key1, @value1)
     @client.update(@key1, @value2)
