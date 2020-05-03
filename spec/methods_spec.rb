@@ -7,8 +7,8 @@ describe "methods" do
     @value1 = 'foo'
     @value2 = 'bar'
     @value3 = 'baz'
-    @lease1 = 10
-    @lease2 = 20
+    @lease1 = {"seconds" => 10}
+    @lease2 = {"seconds" => 20}
 
     @client = new_client
 
@@ -31,6 +31,12 @@ describe "methods" do
 
   it "creates key", :type => :feature do
     @client.create @key1, @value1
+  end
+
+  it "creates key with lease info", :type => :feature do
+    @client.create @key1, @value1, lease_info: {
+      "seconds" => 60
+    }
   end
 
   it "updates key", :type => :feature do
@@ -79,17 +85,17 @@ describe "methods" do
   end
 
   it "renews key lease", :type => :feature do
-    @client.create(@key1, @value1, lease: @lease1)
+    @client.create(@key1, @value1, lease_info: @lease1)
     @client.renew_lease(@key1, @lease2)
     lease = @client.get_lease(@key1)
-    expect(lease).to be > @lease1
+    expect(lease).to be > @lease1["seconds"]
   end
 
   it "renews all key leases in uuid", :type => :feature do
-    @client.create(@key1, @value1, lease: @lease1)
+    @client.create(@key1, @value1, lease_info: @lease1)
     @client.renew_all_leases(@lease2)
     lease = @client.get_lease(@key1)
-    expect(lease).to be > @lease1
+    expect(lease).to be > @lease1["seconds"]
   end
 
   #
@@ -130,21 +136,21 @@ describe "methods" do
   end
 
   it "reads key lease", :type => :feature do
-    @client.create(@key1, @value1, lease: @lease1)
+    @client.create(@key1, @value1, lease_info: @lease1)
     lease = @client.get_lease(@key1)
-    expect(lease).to be <= @lease1
+    expect(lease).to be <= @lease1["seconds"]
   end
 
   it "reads n shortest key leases", :type => :feature do
-    @client.create(@key1, @value1, lease: @lease1)
-    @client.create(@key2, @value1, lease: @lease1)
-    @client.create(@key3, @value1, lease: @lease1)
+    @client.create(@key1, @value1, lease_info: @lease1)
+    @client.create(@key2, @value1, lease_info: @lease1)
+    @client.create(@key3, @value1, lease_info: @lease1)
     keyleases = @client.get_n_shortest_leases(2)
     expect(keyleases.size).to eq(2)
   end
 
   #
-  
+
   it "tx reads key", :type => :feature do
     @client.create @key1, @value1
     value = @client.tx_read @key1
@@ -181,15 +187,15 @@ describe "methods" do
   end
 
   it "tx reads key lease", :type => :feature do
-    @client.create(@key1, @value1, lease: @lease1)
+    @client.create(@key1, @value1, lease_info: @lease1)
     lease = @client.tx_get_lease(@key1)
-    expect(lease).to be <= @lease1
+    expect(lease).to be <= @lease1["seconds"]
   end
 
   it "tx reads n shortest key leases", :type => :feature do
-    @client.create(@key1, @value1, lease: @lease1)
-    @client.create(@key2, @value1, lease: @lease1)
-    @client.create(@key3, @value1, lease: @lease1)
+    @client.create(@key1, @value1, lease_info: @lease1)
+    @client.create(@key2, @value1, lease_info: @lease1)
+    @client.create(@key3, @value1, lease_info: @lease1)
     keyleases = @client.tx_get_n_shortest_leases(2)
     expect(keyleases.size).to eq(2)
   end

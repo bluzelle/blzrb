@@ -23,7 +23,7 @@ key = "#{Time.now.to_i}"
 value = "bar"
 
 puts 'creating key'
-client.create key, value
+client.create key, value, lease: 1
 puts 'created key'
 puts 'reading key'
 value = client.read key
@@ -32,5 +32,4 @@ puts 'updating key'
 client.update key, 'baz'
 puts 'updated key'
 puts 'deleting key'
-client.delete key
-puts 'deleted key'
+#client.delete key

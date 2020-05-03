@@ -31,6 +31,7 @@ MSG_KEYS_ORDER = %w[
   UUID
   Value
 ].freeze
+BLOCK_TIME_IN_SECONDS = 5
 
 module Bluzelle
   class OptionsError < StandardError
@@ -45,14 +46,14 @@ module Bluzelle
 
     gas_info = options.fetch('gas_info', {})
     unless gas_info.class.equal?(Hash)
-      raise OptionsError, 'gas_info should be a dict of {gas_price, max_fee, max_gas}'
+      raise OptionsError, 'gas_info should be a hash of {gas_price, max_fee, max_gas}'
     end
 
     gas_info_keys = %w[gas_price max_fee max_gas]
     gas_info_keys.each do |k|
       v = gas_info.fetch(k, 0)
       unless v.class.equal?(Integer)
-        raise OptionsError, 'gas_info[%s] should be an int' % k
+        raise OptionsError, "gas_info[#{k}] should be an int"
       end
 
       gas_info[k] = v
@@ -114,13 +115,16 @@ module Bluzelle
 
     # mutate
 
-    def create(key, value, lease: 0)
-      send_transaction('post', '/crud/create', { 'Key' => key, 'Lease' => lease.to_s, 'Value' => value })
+    def create(key, value, lease_info: nil)
+      payload = {"Key" => key}
+      payload["Lease"] = Bluzelle::lease_info_to_blocks(lease_info).to_s if lease_info
+      payload["Value"] = value
+      send_transaction('post', '/crud/create', payload)
     end
 
-    def update(key, value, lease: nil)
+    def update(key, value, lease_info: nil)
       payload = {"Key" => key}
-      payload["Lease"] = lease.to_s if lease.is_a? Integer
+      payload["Lease"] = Bluzelle::lease_info_to_blocks(lease_info).to_s if lease_info
       payload["Value"] = value
       send_transaction("post", "/crud/update", payload)
     end
@@ -145,12 +149,12 @@ module Bluzelle
       send_transaction("post", "/crud/multiupdate", {"KeyValues" => list})
     end
 
-    def renew_lease(key, lease)
-      send_transaction("post", "/crud/renewlease", {"Key" => key, "Lease" => lease.to_s})
+    def renew_lease(key, lease_info)
+      send_transaction("post", "/crud/renewlease", {"Key" => key, "Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s})
     end
 
-    def renew_all_leases(lease)
-      send_transaction("post", "/crud/renewleaseall", {"Lease" => lease.to_s})
+    def renew_all_leases(lease_info)
+      send_transaction("post", "/crud/renewleaseall", {"Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s})
     end
 
     # query
@@ -187,12 +191,16 @@ module Bluzelle
 
     def get_lease(key)
       url = "/crud/getlease/#{@options["uuid"]}/#{key}"
-      api_query(url)["result"]["lease"].to_i
+      Bluzelle::lease_blocks_to_seconds api_query(url)["result"]["lease"].to_i
     end
 
     def get_n_shortest_leases(n)
-      url = "/crud/getnshortestlease/#{@options["uuid"]}/#{n}"
-      api_query(url)["result"]["keyleases"]
+      url = "/crud/getnshortestleases/#{@options["uuid"]}/#{n}"
+      kls = api_query(url)["result"]["keyleases"]
+      kls.each do |kl|
+        kl["lease"] = Bluzelle::lease_blocks_to_seconds kl["lease"]
+      end
+      kls
     end
 
     #
@@ -224,12 +232,16 @@ module Bluzelle
 
     def tx_get_lease(key)
       res = send_transaction("post", "/crud/getlease", {"Key" => key})
-      res["lease"].to_i
+      Bluzelle::lease_blocks_to_seconds res["lease"].to_i
     end
 
     def tx_get_n_shortest_leases(n)
-      res = send_transaction("post", "/crud/getnshortestlease", {"N" => n.to_s})
-      res["keyleases"]
+      res = send_transaction("post", "/crud/getnshortestleases", {"N" => n.to_s})
+      kls = res["keyleases"]
+      kls.each do |kl|
+        kl["lease"] = Bluzelle::lease_blocks_to_seconds kl["lease"]
+      end
+      kls
     end
 
     #
@@ -422,7 +434,7 @@ module Bluzelle
 
   def self.hex_to_ascii(h)
     [h].pack('H*')
-   end
+  end
 
   def self.make_random_string(size)
     SecureRandom.alphanumeric size
@@ -432,5 +444,49 @@ module Bluzelle
     JSON.dump h
     # h.to_json
     # Hash[*h.sort.flatten].to_json
+  end
+
+  def self.lease_info_to_blocks(lease_info)
+    if !lease_info
+      raise OptionsError, 'provided lease info is nil'
+    end
+    unless lease_info.class.equal?(Hash)
+      raise OptionsError, 'lease_info should be a hash of {days, hours, minutes, seconds}'
+    end
+
+    days = lease_info.fetch('days', 0)
+    hours = lease_info.fetch('hours', 0)
+    minutes = lease_info.fetch('minutes', 0)
+    seconds = lease_info.fetch('seconds', 0)
+
+    if seconds
+      unless seconds.class.equal?(Integer)
+        raise OptionsError, 'lease_info[seconds] should be an int'
+      end
+    end
+    if minutes
+      unless minutes.class.equal?(Integer)
+        raise OptionsError, 'lease_info[minutes] should be an int'
+      end
+    end
+    if hours
+      unless hours.class.equal?(Integer)
+        raise OptionsError, 'lease_info[hours] should be an int'
+      end
+    end
+    if days
+      unless days.class.equal?(Integer)
+        raise OptionsError, 'lease_info[days] should be an int'
+      end
+    end
+
+    seconds += days * 24 * 60 * 60
+  	seconds += hours * 60 * 60
+  	seconds += minutes * 60
+    seconds / BLOCK_TIME_IN_SECONDS # rounded down
+  end
+
+  def self.lease_blocks_to_seconds(blocks)
+    blocks * BLOCK_TIME_IN_SECONDS
   end
 end
