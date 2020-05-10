@@ -110,7 +110,7 @@ module Bluzelle
         'post',
         '/crud/create',
         payload,
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -122,7 +122,7 @@ module Bluzelle
         "post",
         "/crud/update",
         payload,
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -131,7 +131,7 @@ module Bluzelle
         "delete",
         "/crud/delete",
         {"Key" => key},
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -140,7 +140,7 @@ module Bluzelle
         "post",
         "/crud/rename",
         {"Key" => key, "NewKey" => new_key},
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -149,7 +149,7 @@ module Bluzelle
         "post",
         "/crud/deleteall",
         {},
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -161,7 +161,7 @@ module Bluzelle
       send_transaction(
         "post",
         "/crud/multiupdate", {"KeyValues" => list},
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -169,7 +169,7 @@ module Bluzelle
       send_transaction(
         "post", "/crud/renewlease",
         {"Key" => key, "Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s},
-        gas_info: gas_info
+        gas_info
       )
     end
 
@@ -177,19 +177,18 @@ module Bluzelle
       send_transaction(
         "post", "/crud/renewleaseall",
         {"Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s},
-        gas_info: gas_info
+        gas_info
       )
     end
 
     # query
 
-    def read(key)
-      url = "/crud/read/#{@options["uuid"]}/#{key}"
-      api_query(url)["result"]["value"]
-    end
-
-    def proven_read(key)
-      url = "/crud/pread/#{@options["uuid"]}/#{key}"
+    def read(key, proof = nil)
+      if proof
+        url = "/crud/read/#{@options["uuid"]}/#{key}"
+      else
+        url = "/crud/pread/#{@options["uuid"]}/#{key}"
+      end
       api_query(url)["result"]["value"]
     end
 
@@ -230,37 +229,37 @@ module Bluzelle
     #
 
     def tx_read(key, gas_info: nil)
-      res = send_transaction("post", "/crud/read", {"Key" => key}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/read", {"Key" => key}, gas_info)
       res["value"]
     end
 
     def tx_has(key, gas_info: nil)
-      res = send_transaction("post", "/crud/has", {"Key" => key}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/has", {"Key" => key}, gas_info)
       res["has"]
     end
 
     def tx_count(gas_info: nil)
-      res = send_transaction("post", "/crud/count", {}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/count", {}, gas_info)
       res["count"].to_i
     end
 
     def tx_keys(gas_info: nil)
-      res = send_transaction("post", "/crud/keys", {}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/keys", {}, gas_info)
       res["keys"]
     end
 
     def tx_key_values(gas_info: nil)
-      res = send_transaction("post", "/crud/keyvalues", {}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/keyvalues", {}, gas_info)
       res["keyvalues"]
     end
 
     def tx_get_lease(key, gas_info: nil)
-      res = send_transaction("post", "/crud/getlease", {"Key" => key}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/getlease", {"Key" => key}, gas_info)
       Bluzelle::lease_blocks_to_seconds res["lease"].to_i
     end
 
     def tx_get_n_shortest_leases(n, gas_info: nil)
-      res = send_transaction("post", "/crud/getnshortestleases", {"N" => n.to_s}, gas_info: gas_info)
+      res = send_transaction("post", "/crud/getnshortestleases", {"N" => n.to_s}, gas_info)
       kls = res["keyleases"]
       kls.each do |kl|
         kl["lease"] = Bluzelle::lease_blocks_to_seconds kl["lease"]
@@ -304,10 +303,10 @@ module Bluzelle
       data
     end
 
-    def send_transaction(method, endpoint, payload, gas_info: nil)
+    def send_transaction(method, endpoint, payload, gas_info)
       @broadcast_retries = 0
       txn = validate_transaction(method, endpoint, payload)
-      broadcast_transaction(txn, gas_info: gas_info)
+      broadcast_transaction(txn, gas_info)
     end
 
     def validate_transaction(method, endpoint, payload)
@@ -323,10 +322,8 @@ module Bluzelle
       api_mutate(method, endpoint, payload)['value']
     end
 
-    def broadcast_transaction(data, gas_info: nil)
+    def broadcast_transaction(data, gas_info)
       # fee
-      fee = data['fee']
-      fee_gas = fee['gas'].to_i
       if gas_info == nil
         gas_info = @options['gas_info']
       end
@@ -334,19 +331,31 @@ module Bluzelle
         raise OptionsError, 'please provide gas_info when initializing the client or in the transaction'
       end
       Bluzelle::validate_gas_info gas_info
-      if gas_info['max_gas'] != 0 && fee_gas > gas_info['max_gas']
-        fee['gas'] = gas_info['max_gas'].to_s
+
+      fee = data['fee']
+      gas = fee['gas'].to_i
+      amount = 0
+      if fee.fetch('amount', []).size() > 0
+        amount = fee['amount'][0]['amount'].to_i
       end
-      if gas_info['max_fee'] != 0
-        fee['amount'] = [{ 'denom' => TOKEN_NAME, 'amount' => gas_info['max_fee'].to_s }]
-      elsif gasInfo['gas_price'] != 0
-        fee['amount'] = [{ 'denom' => TOKEN_NAME, 'amount' => (fee_gas * gas_info['gas_price']).to_s }]
+
+      max_gas = gas_info.fetch('max_gas', nil)
+      max_fee = gas_info.fetch('max_fee', nil)
+      gas_price = gas_info.fetch('gas_price', nil)
+
+      if max_gas != 0 && gas > max_gas
+        gas = max_gas
+      end
+      if max_fee != 0
+        amount = max_fee
+      elsif gas_info['gas_price'] != 0
+        amount = fee_gas * gas_price
       end
 
       # sort
       txn = build_txn(
-        fee: fee,
-        msg: data['msg'][0]
+        {"gas" => gas.to_s, "amount" => [{ 'denom' => TOKEN_NAME, 'amount' => amount.to_s}]},
+        data['msg'][0]
       )
 
       # signatures
@@ -388,7 +397,7 @@ module Bluzelle
 
         sleep BROADCAST_RETRY_INTERVAL_SECONDS
         set_account()
-        broadcast_transaction(txn, gas_info: gas_info)
+        broadcast_transaction(txn, gas_info)
         return
       end
 
@@ -414,7 +423,7 @@ module Bluzelle
       Bluzelle::base64_encode sig
     end
 
-    def build_txn(fee:, msg:)
+    def build_txn(fee, msg)
       # TODO: find a better way to sort
       fee_amount = fee['amount'][0]
       txn = {

@@ -12,6 +12,10 @@ deploy:
 	@gem push *.gem
 	@rm -f *.gem
 
+uat:
+	@bundle exec ruby uat/server.rb
+
 .PHONY: example \
 	test \
-	deploy
+	deploy \
+	uat
