@@ -18,15 +18,22 @@ client = Bluzelle::new_client({
 
 key = "#{Time.now.to_i}"
 value = "bar"
+gas_info = {
+  'max_fee' => 4_000_001
+}
 
 puts 'creating key'
-client.create key, value, lease: 1
+client.create key, value, gas_info, {"seconds" => 15}
 puts 'created key'
+
 puts 'reading key'
-value = client.read key
+value = client.read key, gas_info
 puts 'read key'
+
 puts 'updating key'
-client.update key, 'baz'
+client.update key, 'baz', gas_info
 puts 'updated key'
+
 puts 'deleting key'
-#client.delete key
+client.delete key, gas_info
+puts 'deleted key'

@@ -9,6 +9,9 @@ describe "methods" do
     @value3 = 'baz'
     @lease1 = {"seconds" => 10}
     @lease2 = {"seconds" => 20}
+    @gas_info = {
+      'max_fee' => 4_000_001
+    }
 
     @client = new_client
 
@@ -30,182 +33,184 @@ describe "methods" do
   #
 
   it "creates key", :type => :feature do
-    @client.create @key1, @value1
+    @client.create @key1, @value1, @gas_info
   end
 
   it "creates key with lease info", :type => :feature do
-    @client.create @key1, @value1, lease_info: {
+    @client.create @key1, @value1, @gas_info, {
       "seconds" => 60
     }
   end
 
-  it "creates key with custom gas info", :type => :feature do
-    @client.create @key1, @value1, gas_info: {
+  it "creates key validates gas info", :type => :feature do
+    @client.create @key1, @value1, {
       "max_fee" => 1000000000
     }
-    expect { @client.create @key2, @value1, gas_info: {
+    expect { @client.create @key2, @value1, {
       "max_fee" => 1
     } }.to raise_error(Bluzelle::APIError, "insufficient fee: insufficient fees; got: 1ubnt required: 2000000ubnt")
   end
 
   it "updates key", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.update(@key1, @value2)
+    @client.create @key1, @value1, @gas_info
+    @client.update @key1, @value2, @gas_info
     value = @client.read(@key1)
     expect(value).to eq(@value2)
     expect(value).to_not eq(@value1)
   end
 
   it "deletes key", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.delete(@key1)
-    expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
+    @client.create @key1, @value1, @gas_info
+    @client.delete @key1, @gas_info
+    expect(@client.has(@key1)).to_not be_truthy
   end
 
   it "renames key", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.rename(@key1, @key2)
-    value = @client.read(@key2)
+    @client.create @key1, @value1, @gas_info
+    @client.rename @key1, @key2, @gas_info
+    value = @client.read @key2
     expect(value).to eq(@value1)
-    expect { @client.read(@key1) }.to raise_error(Bluzelle::APIError, "unknown request: key not found")
+    expect(@client.has(@key2)).to be_truthy
+    expect(@client.has(@key1)).to_not be_truthy
   end
 
   it "deletes all keys in uuid", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.create(@key2, @value1)
-    @client.read(@key1)
-    @client.read(@key1)
-    @client.delete_all()
+    @client.create @key1, @value1, @gas_info
+    @client.create @key2, @value1, @gas_info
+    @client.read @key1
+    @client.read @key2
+    @client.delete_all(@gas_info)
     num = @client.count()
     expect(num).to eq(0)
   end
 
   it "multi updates keys", :type => :feature do
-    @client.create(@key1, @value1)
-    @client.create(@key2, @value1)
+    @client.create @key1, @value1, @gas_info
+    @client.create @key2, @value1, @gas_info
     #
-    data = {}
-    data[@key1] = @key1
-    data[@key2] = @key2
-    @client.multi_update(data)
+    data = [
+      {"key": @key1, "value": @key1},
+      {"key": @key2, "value": @key2}
+    ]
+    @client.multi_update data, @gas_info
     #
     expect(@client.read(@key1)).to eq(@key1)
     expect(@client.read(@key2)).to eq(@key2)
   end
 
   it "renews key lease", :type => :feature do
-    @client.create(@key1, @value1, lease_info: @lease1)
-    @client.renew_lease(@key1, @lease2)
-    lease = @client.get_lease(@key1)
+    @client.create @key1, @value1, @gas_info, @lease1
+    @client.renew_lease @key1, @gas_info, @lease2
+    lease = @client.get_lease @key1
     expect(lease).to be > @lease1["seconds"]
   end
 
   it "renews all key leases in uuid", :type => :feature do
-    @client.create(@key1, @value1, lease_info: @lease1)
-    @client.renew_all_leases(@lease2)
-    lease = @client.get_lease(@key1)
+    @client.create @key1, @value1, @gas_info, @lease1
+    @client.renew_all_leases @gas_info, @lease2
+    lease = @client.get_lease @key1
     expect(lease).to be > @lease1["seconds"]
   end
 
   #
 
   it "reads key", :type => :feature do
-    @client.create @key1, @value1
+    @client.create @key1, @value1, @gas_info
     value = @client.read @key1
     expect(value).to eq(@value1)
   end
 
   it "checks has key", :type => :feature do
-    @client.create(@key1, @value1)
-    b = @client.has(@key1)
+    @client.create @key1, @value1, @gas_info
+    b = @client.has @key1
     expect(b).to be_truthy
   end
 
   it "counts keys in uuid", :type => :feature do
-    num = @client.count()
-    @client.create(@key1, @value1)
-    num2 = @client.count()
+    num = @client.count
+    @client.create @key1, @value1, @gas_info
+    num2 = @client.count
     expect(num+1).to eq(num2)
   end
 
   it "reads keys in uuid", :type => :feature do
-    keys = @client.keys()
+    keys = @client.keys
     expect(keys).to_not include(@key1)
-    @client.create(@key1, @value1)
-    keys = @client.keys()
+    @client.create @key1, @value1, @gas_info
+    keys = @client.keys
     expect(keys).to include(@key1)
   end
 
   it "reads keyvalues in uuid", :type => :feature do
     key_values = key_values_to_dict(@client.key_values())
     expect(key_values).to_not have_key(@key1)
-    @client.create(@key1, @value1)
+    @client.create @key1, @value1, @gas_info
     key_values = key_values_to_dict(@client.key_values())
     expect(key_values[@key1]).to eq(@value1)
   end
 
   it "reads key lease", :type => :feature do
-    @client.create(@key1, @value1, lease_info: @lease1)
-    lease = @client.get_lease(@key1)
+    @client.create @key1, @value1, @gas_info, @lease1
+    lease = @client.get_lease @key1
     expect(lease).to be <= @lease1["seconds"]
   end
 
   it "reads n shortest key leases", :type => :feature do
-    @client.create(@key1, @value1, lease_info: @lease1)
-    @client.create(@key2, @value1, lease_info: @lease1)
-    @client.create(@key3, @value1, lease_info: @lease1)
-    keyleases = @client.get_n_shortest_leases(2)
+    @client.create @key1, @value1, @gas_info, @lease1
+    @client.create @key2, @value1, @gas_info, @lease1
+    @client.create @key3, @value1, @gas_info, @lease1
+    keyleases = @client.get_n_shortest_leases 2
     expect(keyleases.size).to eq(2)
   end
 
   #
 
   it "tx reads key", :type => :feature do
-    @client.create @key1, @value1
-    value = @client.tx_read @key1
+    @client.create @key1, @value1, @gas_info
+    value = @client.tx_read @key1, @gas_info
     expect(value).to eq(@value1)
   end
 
   it "tx checks has key", :type => :feature do
-    @client.create(@key1, @value1)
-    b = @client.tx_has(@key1)
+    @client.create @key1, @value1, @gas_info
+    b = @client.tx_has @key1, @gas_info
     expect(b).to be_truthy
   end
 
   it "tx counts keys in uuid", :type => :feature do
-    num = @client.count()
-    @client.create(@key1, @value1)
-    num2 = @client.tx_count()
+    num = @client.tx_count @gas_info
+    @client.create @key1, @value1, @gas_info
+    num2 = @client.tx_count @gas_info
     expect(num+1).to eq(num2)
   end
 
   it "tx reads keys in uuid", :type => :feature do
-    keys = @client.tx_keys()
+    keys = @client.tx_keys @gas_info
     expect(keys).to_not include(@key1)
-    @client.create(@key1, @value1)
-    keys = @client.tx_keys()
+    @client.create @key1, @value1, @gas_info
+    keys = @client.tx_keys @gas_info
     expect(keys).to include(@key1)
   end
 
   it "tx reads keyvalues in uuid", :type => :feature do
-    key_values = key_values_to_dict(@client.tx_key_values())
+    key_values = key_values_to_dict(@client.tx_key_values(@gas_info))
     expect(key_values).to_not have_key(@key1)
-    @client.create(@key1, @value1)
-    key_values = key_values_to_dict(@client.tx_key_values())
+    @client.create @key1, @value1, @gas_info
+    key_values = key_values_to_dict(@client.tx_key_values(@gas_info))
     expect(key_values[@key1]).to eq(@value1)
   end
 
   it "tx reads key lease", :type => :feature do
-    @client.create(@key1, @value1, lease_info: @lease1)
-    lease = @client.tx_get_lease(@key1)
+    @client.create @key1, @value1, @gas_info, @lease1
+    lease = @client.tx_get_lease @key1, @gas_info
     expect(lease).to be <= @lease1["seconds"]
   end
 
   it "tx reads n shortest key leases", :type => :feature do
-    @client.create(@key1, @value1, lease_info: @lease1)
-    @client.create(@key2, @value1, lease_info: @lease1)
-    @client.create(@key3, @value1, lease_info: @lease1)
-    keyleases = @client.tx_get_n_shortest_leases(2)
+    @client.create @key1, @value1, @gas_info, @lease1
+    @client.create @key2, @value1, @gas_info, @lease1
+    @client.create @key3, @value1, @gas_info, @lease1
+    keyleases = @client.tx_get_n_shortest_leases 2, @gas_info
     expect(keyleases.size).to eq(2)
   end
 end
