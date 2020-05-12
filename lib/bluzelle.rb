@@ -33,11 +33,28 @@ MSG_KEYS_ORDER = %w[
 ].freeze
 BLOCK_TIME_IN_SECONDS = 5
 
+KEY_MUST_BE_A_STRING = "Key must be a string"
+NEW_KEY_MUST_BE_A_STRING = "New key must be a string"
+VALUE_MUST_BE_A_STRING = "Value must be a string"
+ALL_KEYS_MUST_BE_STRINGS = "All keys must be strings"
+ALL_VALUES_MUST_BE_STRINGS = "All values must be strings"
+INVALID_LEASE_TIME = "Invalid lease time"
+INVALID_VALUE_SPECIFIED = "Invalid value specified"
+ADDRESS_MUST_BE_A_STRING = "address must be a string"
+MNEMONIC_MUST_BE_A_STRING = "mnemonic must be a string"
+UUID_MUST_BE_A_STRING = "uuid must be a string"
+INVALID_TRANSACTION = "Invalid transaction."
+
 module Bluzelle
   class OptionsError < StandardError
   end
 
   class APIError < StandardError
+    attr_reader :apiError
+    def initialize(msg, apiError)
+      @apiError = apiError
+      super(msg)
+    end
   end
 
   def self.new_client options
@@ -85,12 +102,12 @@ module Bluzelle
     end
 
     def set_account
-      @account = read_account
+      @bluzelle_account = account
     end
 
     #
 
-    def read_account
+    def account
       url = "/auth/accounts/#{@options['address']}"
       api_query(url)['result']['value']
     end
@@ -103,6 +120,12 @@ module Bluzelle
     # mutate
 
     def create(key, value, lease_info: nil, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
+      if !value.instance_of? String
+        raise APIError.new(VALUE_MUST_BE_A_STRING)
+      end
       payload = {"Key" => key}
       payload["Lease"] = Bluzelle::lease_info_to_blocks(lease_info).to_s if lease_info
       payload["Value"] = value
@@ -115,6 +138,12 @@ module Bluzelle
     end
 
     def update(key, value, lease_info: nil, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
+      if !value.instance_of? String
+        raise APIError.new(VALUE_MUST_BE_A_STRING)
+      end
       payload = {"Key" => key}
       payload["Lease"] = Bluzelle::lease_info_to_blocks(lease_info).to_s if lease_info
       payload["Value"] = value
@@ -127,6 +156,9 @@ module Bluzelle
     end
 
     def delete(key, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       send_transaction(
         "delete",
         "/crud/delete",
@@ -136,6 +168,12 @@ module Bluzelle
     end
 
     def rename(key, new_key, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
+      if !new_key.instance_of? String
+        raise APIError.new(NEW_KEY_MUST_BE_A_STRING)
+      end
       send_transaction(
         "post",
         "/crud/rename",
@@ -166,6 +204,9 @@ module Bluzelle
     end
 
     def renew_lease(key, lease_info, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       send_transaction(
         "post", "/crud/renewlease",
         {"Key" => key, "Lease" => Bluzelle::lease_info_to_blocks(lease_info).to_s},
@@ -184,6 +225,9 @@ module Bluzelle
     # query
 
     def read(key, proof = nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       if proof
         url = "/crud/read/#{@options["uuid"]}/#{key}"
       else
@@ -193,6 +237,9 @@ module Bluzelle
     end
 
     def has(key)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       url = "/crud/has/#{@options["uuid"]}/#{key}"
       api_query(url)["result"]["has"]
     end
@@ -213,11 +260,17 @@ module Bluzelle
     end
 
     def get_lease(key)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       url = "/crud/getlease/#{@options["uuid"]}/#{key}"
       Bluzelle::lease_blocks_to_seconds api_query(url)["result"]["lease"].to_i
     end
 
     def get_n_shortest_leases(n)
+      if n < 0
+        raise APIError.new(INVALID_VALUE_SPECIFIED)
+      end
       url = "/crud/getnshortestleases/#{@options["uuid"]}/#{n}"
       kls = api_query(url)["result"]["keyleases"]
       kls.each do |kl|
@@ -229,11 +282,17 @@ module Bluzelle
     #
 
     def tx_read(key, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       res = send_transaction("post", "/crud/read", {"Key" => key}, gas_info)
       res["value"]
     end
 
     def tx_has(key, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       res = send_transaction("post", "/crud/has", {"Key" => key}, gas_info)
       res["has"]
     end
@@ -254,11 +313,17 @@ module Bluzelle
     end
 
     def tx_get_lease(key, gas_info: nil)
+      if !key.instance_of? String
+        raise APIError.new(KEY_MUST_BE_A_STRING)
+      end
       res = send_transaction("post", "/crud/getlease", {"Key" => key}, gas_info)
       Bluzelle::lease_blocks_to_seconds res["lease"].to_i
     end
 
     def tx_get_n_shortest_leases(n, gas_info: nil)
+      if n < 0
+        raise APIError.new(INVALID_VALUE_SPECIFIED)
+      end
       res = send_transaction("post", "/crud/getnshortestleases", {"N" => n.to_s}, gas_info)
       kls = res["keyleases"]
       kls.each do |kl|
@@ -348,7 +413,7 @@ module Bluzelle
       end
       if max_fee != 0
         amount = max_fee
-      elsif gas_info['gas_price'] != 0
+      elsif gas_price != 0
         amount = fee_gas * gas_price
       end
 
@@ -360,12 +425,12 @@ module Bluzelle
 
       # signatures
       txn['signatures'] = [{
-        'account_number' => @account['account_number'].to_s,
+        'account_number' => @bluzelle_account['account_number'].to_s,
         'pub_key' => {
           'type' => PUB_KEY_TYPE,
           'value' => Bluzelle::base64_encode(@wallet.public_key.compressed.to_bytes)
         },
-        'sequence' => @account['sequence'].to_s,
+        'sequence' => @bluzelle_account['sequence'].to_s,
         'signature' => sign_transaction(txn)
       }]
 
@@ -380,7 +445,7 @@ module Bluzelle
       #
       # this is far from ideal, doesn't match their docs, and is probably going to change (again) in the future.
       unless response.fetch('code', nil)
-        @account['sequence'] += 1
+        @bluzelle_account['sequence'] += 1
         if response.fetch('data', nil)
           return JSON.parse Bluzelle::hex_to_ascii response['data']
         end
@@ -392,7 +457,7 @@ module Bluzelle
         @broadcast_retries += 1
         @logger.warn("transaction failed ... retrying(#{@broadcast_retries}) ...")
         if @broadcast_retries >= BROADCAST_MAX_RETRIES
-          raise APIError, "transaction failed after max retry attempts"
+          raise APIError.new("transaction failed after max retry attempts", response)
         end
 
         sleep BROADCAST_RETRY_INTERVAL_SECONDS
@@ -401,17 +466,17 @@ module Bluzelle
         return
       end
 
-      raise APIError, raw_log
+      raise APIError.new(raw_log, response)
     end
 
     def sign_transaction(txn)
       payload = {
-        'account_number' => @account['account_number'].to_s,
+        'account_number' => @bluzelle_account['account_number'].to_s,
         'chain_id' => @options['chain_id'],
         'fee' => txn['fee'],
         'memo' => txn['memo'],
         'msgs' => txn['msg'],
-        'sequence' => @account['sequence'].to_s
+        'sequence' => @bluzelle_account['sequence'].to_s
       }
       payload = Bluzelle::json_dumps(payload)
 
@@ -455,7 +520,7 @@ module Bluzelle
 
     def get_response_error(response)
       error = response['error']
-      return APIError.new(error) if error
+      return APIError.new(error, response) if error
     end
   end
 

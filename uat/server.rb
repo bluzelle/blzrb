@@ -35,7 +35,11 @@ error do
   status 400 # or whatever
 
   e = env['sinatra.error']
-  {:result => 'error', :message => e.message}.to_json
+  msg = e.message
+  if e.instance_of? Bluzelle::APIError
+    msg = e.apiError
+  end
+  msg.to_json
 end
 
 METHODS_WITH_NAMED_ARGS = {
@@ -89,7 +93,11 @@ post '/' do
       args.delete_at lease_info_index
     end
   end
-  json client.public_send(method, *args, **kwargs)  || ''
+  result = client.public_send(method, *args, **kwargs)
+  if result == nil
+    nil
+  end
+  json result
 end
 
 puts "serving at #{PORT}"

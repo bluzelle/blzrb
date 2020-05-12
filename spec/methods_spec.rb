@@ -18,7 +18,7 @@ describe "methods" do
   #
 
   it "reads account", :type => :feature do
-    account = @client.read_account()
+    account = @client.account()
     expect(account['address']).to eq(ADDRESS)
   end
 
