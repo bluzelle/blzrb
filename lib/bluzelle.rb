@@ -61,8 +61,6 @@ module Bluzelle
     raise OptionsError, 'address is required' unless options.fetch('address', nil)
     raise OptionsError, 'mnemonic is required' unless options.fetch('mnemonic', nil)
 
-    Bluzelle::validate_gas_info options.fetch('gas_info', {})
-
     options['debug'] = false unless options.fetch('debug', false)
     options['chain_id'] = DEFAULT_CHAIN_ID unless options.fetch('chain_id', nil)
     options['endpoint'] = DEFAULT_ENDPOINT unless options.fetch('endpoint', nil)
@@ -389,9 +387,6 @@ module Bluzelle
 
     def broadcast_transaction(data, gas_info)
       # fee
-      if gas_info == nil
-        gas_info = @options['gas_info']
-      end
       if gas_info == nil
         raise OptionsError, 'please provide gas_info when initializing the client or in the transaction'
       end

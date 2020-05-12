@@ -17,9 +17,6 @@ client = Bluzelle.new_client({
  'uuid' => ENV.fetch('UUID', nil),
  'endpoint' => ENV.fetch('ENDPOINT', ''),
  'chain_id' => ENV.fetch('CHAIN_ID', nil),
- 'gas_info' => {
-   'max_fee' => 4_000_001
- },
  'debug' => true
 })
 
