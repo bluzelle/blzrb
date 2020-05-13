@@ -30,17 +30,17 @@ client = Bluzelle::new_client({
   "mnemonic" => "...",
   "uuid" => "bluzelle",
   "endpoint" => "http://testnet.public.bluzelle.com:1317",
-  "gas_info" => {
-    "max_fee" => 4000001,
-  },
 })
 
 key = 'foo'
+gas_info = {
+  'max_fee' => 4000001,
+}
 
-client.create key, 'bar'
+client.create key, 'bar', gas_info
 value = client.read key
-client.update key, 'baz'
-client.delete key
+client.update key, 'baz', gas_info
+client.delete key, gas_info
 ```
 
 ### Examples
