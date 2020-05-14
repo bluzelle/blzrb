@@ -56,11 +56,7 @@ post '/' do
     raise "unknown method #{method}"
   end
 
-  result = client.public_send(method, *args)
-  if result == nil
-    nil
-  end
-  json result
+  json client.public_send(method, *args)
 end
 
 puts "serving at #{PORT}"

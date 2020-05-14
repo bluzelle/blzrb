@@ -431,7 +431,7 @@ module Bluzelle
       if max_fee != 0
         amount = max_fee
       elsif gas_price != 0
-        amount = fee_gas * gas_price
+        amount = gas * gas_price
       end
 
       # sort
