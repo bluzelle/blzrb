@@ -51,7 +51,7 @@ describe "methods" do
     } }.to raise_error(Bluzelle::APIError, "insufficient fee: insufficient fees; got: 1ubnt required: 2000000ubnt")
   end
 
-  it "creates key with lease info", :type => :feature do
+  it "creates key with symbols", :type => :feature do
     k = "#{@key1}#$%&"
     @client.create k, @value1, @gas_info
     keys = @client.keys
