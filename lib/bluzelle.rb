@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'json'
 require 'digest'
 require 'logger'
+require 'cgi'
 require 'net/http'
 require 'securerandom'
 require 'ecdsa'
@@ -645,10 +646,13 @@ module Bluzelle
   end
 
   def self.encode_safe(s)
-    # puts URI.encode_www_form_component(s)
-    # URI.encode_www_form_component(s)
-    URI::encode(s).gsub(/([\#\?])/) { |token|
+    x = CGI.escape(s)
+    # x = URI.encode_www_form_component(s)
+    # x = URI::encode(s)
+    x.gsub(/([\#\?])/) { |token|
       "%#{token[0].ord.to_s(16)}"
     }
+    puts "---> #{x}"
+    x
   end
 end
