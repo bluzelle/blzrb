@@ -52,7 +52,8 @@ describe "methods" do
   end
 
   it "creates key with symbols", :type => :feature do
-    k = "#{@key1}#$%&"
+    #k = "#{@key1}#$%&"
+    k = "#{@key1} !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
     @client.create k, @value1, @gas_info
     keys = @client.keys
     expect(keys).to include(k)

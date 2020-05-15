@@ -257,9 +257,9 @@ module Bluzelle
       end
       key = Bluzelle::encode_safe key
       if proof
-        url = "/crud/read/#{@options["uuid"]}/#{key}"
-      else
         url = "/crud/pread/#{@options["uuid"]}/#{key}"
+      else
+        url = "/crud/read/#{@options["uuid"]}/#{key}"
       end
       api_query(url)["result"]["value"]
     end
@@ -645,8 +645,11 @@ module Bluzelle
   end
 
   def self.encode_safe(s)
-    URI.escape(s).gsub(/([\#\?])/) { |token|
-      "%#{token[0].ord.to_s(16)}"
-    }
+    puts URI.encode_www_form_component(s)
+    URI.encode_www_form_component(s)
+    # URI::encode(s).gsub(/([\#\?])/) { |token|
+    #   puts token
+    #   "%#{token[0].ord.to_s(16)}"
+    # }
   end
 end
