@@ -229,7 +229,7 @@ module Bluzelle
       )
     end
 
-    def renew_all_leases(gas_info, lease_info = nil)
+    def renew_lease_all(gas_info, lease_info = nil)
       payload = {}
       if lease_info != nil
         lease = Bluzelle::lease_info_to_blocks(lease_info)
@@ -245,12 +245,17 @@ module Bluzelle
       )
     end
 
+    def renew_all_leases(gas_info, lease_info = nil)
+      renew_lease_all gas_info, lease_info
+    end
+
     # query
 
     def read(key, proof = nil)
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      key = Bluzelle::encode_safe key
       if proof
         url = "/crud/read/#{@options["uuid"]}/#{key}"
       else
@@ -263,6 +268,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      key = Bluzelle::encode_safe key
       url = "/crud/has/#{@options["uuid"]}/#{key}"
       api_query(url)["result"]["has"]
     end
@@ -286,6 +292,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      key = Bluzelle::encode_safe key
       url = "/crud/getlease/#{@options["uuid"]}/#{key}"
       Bluzelle::lease_blocks_to_seconds api_query(url)["result"]["lease"].to_i
     end
@@ -495,8 +502,8 @@ module Bluzelle
         'msgs' => txn['msg'],
         'sequence' => @bluzelle_account['sequence'].to_s
       }
-      payload = Bluzelle::json_dumps(payload)
-
+      payload = Bluzelle::json_dumps payload
+      payload = Bluzelle::sanitize_string payload
       pk = Secp256k1::PrivateKey.new(privkey: @wallet.private_key.to_bytes, raw: true)
       rs = pk.ecdsa_sign payload
       r = rs.slice(0, 32).read_string.reverse
@@ -629,5 +636,17 @@ module Bluzelle
       gas_info[k] = v
     end
     gas_info
+  end
+
+  def self.sanitize_string(s)
+    s.gsub(/([&<>])/) { |token|
+      "\\u00#{token[0].ord.to_s(16)}"
+    }
+  end
+
+  def self.encode_safe(s)
+    URI.escape(s).gsub(/([\#\?])/) { |token|
+      "%#{token[0].ord.to_s(16)}"
+    }
   end
 end
