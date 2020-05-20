@@ -1,47 +1,34 @@
 describe "options" do
-  it "requires address", :type => :feature do
-    expect { Bluzelle::new_client({}) }.to raise_error(Bluzelle::OptionsError, "address is required")
-  end
-
   it "requires mnemonic", :type => :feature do
     expect { Bluzelle::new_client({
-      "address" => "1"
     }) }.to raise_error(Bluzelle::OptionsError, "mnemonic is required")
+
+    expect { Bluzelle::new_client({
+      "mnemonic" => 1
+    }) }.to raise_error(Bluzelle::OptionsError, "mnemonic must be a string")
+  end
+
+  it "requires uuid", :type => :feature do
+    expect { Bluzelle::new_client({
+      "mnemonic" => "...",
+    }) }.to raise_error(Bluzelle::OptionsError, "uuid is required")
+
+    expect { Bluzelle::new_client({
+      "mnemonic" => "...",
+      "uuid" => 1,
+    }) }.to raise_error(Bluzelle::OptionsError, "uuid must be a string")
   end
 
   it "validates gas info", :type => :feature do
-    expect { Bluzelle::new_client({
-      "address" => "1",
-      "mnemonic" => "1",
-      "gas_info" => ""
-    }) }.to raise_error(Bluzelle::OptionsError, "gas_info should be a hash of {gas_price, max_fee, max_gas}")
-
-    expect { Bluzelle::new_client({
-      "address" => "1",
-      "mnemonic" => "1",
-      "gas_info" => 1
-    }) }.to raise_error(Bluzelle::OptionsError, "gas_info should be a hash of {gas_price, max_fee, max_gas}")
-
-    expect { Bluzelle::new_client({
-      "address" => "1",
-      "mnemonic" => "1",
-      "gas_info" => []
-    }) }.to raise_error(Bluzelle::OptionsError, "gas_info should be a hash of {gas_price, max_fee, max_gas}")
-
-    expect { Bluzelle::new_client({
-      "address" => "1",
-      "mnemonic" => "1",
-      "gas_info" => {
-          "gas_price" => ""
-      }
-    }) }.to raise_error(Bluzelle::OptionsError, "gas_info[gas_price] should be an int")
+    expect { Bluzelle::validate_gas_info "" }.to raise_error(Bluzelle::OptionsError, "gas_info should be a hash of {gas_price, max_fee, max_gas}")
+    expect { Bluzelle::validate_gas_info 1 }.to raise_error(Bluzelle::OptionsError, "gas_info should be a hash of {gas_price, max_fee, max_gas}")
+    expect { Bluzelle::validate_gas_info [] }.to raise_error(Bluzelle::OptionsError, "gas_info should be a hash of {gas_price, max_fee, max_gas}")
+    expect { Bluzelle::validate_gas_info({ "gas_price" => "" }) }.to raise_error(Bluzelle::OptionsError, "gas_info[gas_price] should be an int")
   end
 
-  it "validates mnemonic and address", :type => :feature do
-    expect { Bluzelle::new_client({
-      "address" => "1",
-      "mnemonic" => MNEMONIC
-    }) }.to raise_error(Bluzelle::OptionsError, "bad credentials(verify your address and mnemonic)")
+  it "correctly derives address", :type => :feature do
+    c = new_client
+    expect(c.address).to eq(ADDRESS)
   end
 end
 

@@ -45,10 +45,16 @@ client.delete key, gas_info
 
 ### Examples
 
-Copy `.env.sample` to `.env` and configure appropriately. You can also use this example [.env](https://gist.github.com/vbstreetz/f05a982530311d155836e27d41c1f73a) on testnet. Then run the `crud.rb` example:
+Copy `.env.sample` to `.env` and configure if needed.
 
 ```
-    DEBUG=false LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby example/crud.rb
+cp .env.sample .env
+```
+
+Then run the example:
+
+```
+    DEBUG=false LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby examples/crud.rb
 ```
 
 ### Tests

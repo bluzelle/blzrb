@@ -11,7 +11,7 @@ client = Bluzelle::new_client({
   "address" =>  ENV.fetch("ADDRESS", nil),
   "mnemonic" => ENV.fetch("MNEMONIC", nil),
   "uuid" =>     ENV.fetch("UUID", nil),
-  "endpoint" => ENV.fetch("ENDPOINT", ""),
+  "endpoint" => ENV.fetch("ENDPOINT", nil),
   "chain_id" =>  ENV.fetch("CHAIN_ID", nil),
   "debug" => debug,
 })

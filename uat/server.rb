@@ -8,12 +8,8 @@ require_relative '../lib/bluzelle'
 
 Dotenv.load('.env')
 
-ADDRESS = ENV.fetch('ADDRESS', nil)
-MNEMONIC = ENV.fetch('MNEMONIC', nil)
-
 client = Bluzelle.new_client({
- 'address' => ADDRESS,
- 'mnemonic' => MNEMONIC,
+ 'mnemonic' => ENV.fetch('MNEMONIC', nil),
  'uuid' => ENV.fetch('UUID', nil),
  'endpoint' => ENV.fetch('ENDPOINT', ''),
  'chain_id' => ENV.fetch('CHAIN_ID', nil),

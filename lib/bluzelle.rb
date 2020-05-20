@@ -60,8 +60,17 @@ module Bluzelle
   end
 
   def self.new_client options
-    raise OptionsError, 'address is required' unless options.fetch('address', nil)
-    raise OptionsError, 'mnemonic is required' unless options.fetch('mnemonic', nil)
+    mnemonic = options.fetch('mnemonic', nil)
+    raise OptionsError, 'mnemonic is required' unless mnemonic
+    if !mnemonic.instance_of? String
+      raise OptionsError.new(MNEMONIC_MUST_BE_A_STRING)
+    end
+
+    uuid = options.fetch('uuid', nil)
+    raise OptionsError, 'uuid is required' unless uuid
+    if !uuid.instance_of? String
+      raise OptionsError.new(UUID_MUST_BE_A_STRING)
+    end
 
     options['debug'] = false unless options.fetch('debug', false)
     options['chain_id'] = DEFAULT_CHAIN_ID unless options.fetch('chain_id', nil)
@@ -70,7 +79,7 @@ module Bluzelle
     c = Client.new options
     c.setup_logging
     c.set_private_key
-    c.verify_address
+    c.set_address
     c.set_account
     c
   end
@@ -78,8 +87,11 @@ module Bluzelle
   private
 
   class Client
+    attr_reader :address
     def initialize(options)
       @options = options
+      @address = ""
+      @account = nil
     end
 
     def setup_logging
@@ -93,12 +105,9 @@ module Bluzelle
       @wallet = master.node_for_path(HD_PATH)
     end
 
-    def verify_address
+    def set_address
       b = Digest::RMD160.digest(Digest::SHA256.digest(@wallet.public_key.compressed.to_bytes))
-      address = Bech32.encode(ADDRESS_PREFIX, Bech32.convert_bits(b, from_bits: 8, to_bits: 5, pad: true))
-      if address != @options['address']
-        raise OptionsError, 'bad credentials(verify your address and mnemonic)'
-      end
+      @address = Bech32.encode(ADDRESS_PREFIX, Bech32.convert_bits(b, from_bits: 8, to_bits: 5, pad: true))
     end
 
     def set_account
@@ -108,7 +117,7 @@ module Bluzelle
     #
 
     def account
-      url = "/auth/accounts/#{@options['address']}"
+      url = "/auth/accounts/#{@address}"
       api_query(url)['result']['value']
     end
 
@@ -406,13 +415,12 @@ module Bluzelle
     end
 
     def validate_transaction(method, endpoint, payload)
-      address = @options['address']
       payload = payload.merge({
         'BaseReq' => {
           'chain_id' => @options['chain_id'],
-          'from' => address
+          'from' => @address
         },
-        'Owner' => address,
+        'Owner' => @address,
         'UUID' => @options['uuid']
       })
       api_mutate(method, endpoint, payload)['value']
@@ -652,7 +660,7 @@ module Bluzelle
     x.gsub(/([\#\?])/) { |token|
       "%#{token[0].ord.to_s(16)}"
     }
-    puts "---> #{x}"
+    # puts "---> #{x}"
     x
   end
 end

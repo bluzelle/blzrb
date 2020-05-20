@@ -1,7 +1,7 @@
 o = $(o)
 
 example:
-	@LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby example/crud.rb
+	@LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby examples/crud.rb
 
 test:
 	@bundle exec rspec --format documentation --fail-fast $(o)
