@@ -65,6 +65,10 @@ Configure env as described in the examples section above.
     bundle exec rspec --format documentation
 ```
 
+### User Acceptance Testing
+
+Please checkout the [UAT.md](https://github.com/vbstreetz/blzrb/blob/master/Readme.md) document for more details.
+
 ### Abort 6 error
 
 If you encounter this error, you either might have to:

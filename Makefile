@@ -1,4 +1,4 @@
-o = $(o)
+o?=$(o)
 
 example:
 	@LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby examples/crud.rb
