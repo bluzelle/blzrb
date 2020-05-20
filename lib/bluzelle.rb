@@ -495,8 +495,7 @@ module Bluzelle
 
         sleep BROADCAST_RETRY_INTERVAL_SECONDS
         set_account()
-        broadcast_transaction(txn, gas_info)
-        return
+        return broadcast_transaction(txn, gas_info)
       end
 
       raise APIError.new(raw_log, response)
