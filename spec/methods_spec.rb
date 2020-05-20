@@ -51,9 +51,8 @@ describe "methods" do
     } }.to raise_error(Bluzelle::APIError, "insufficient fee: insufficient fees; got: 1ubnt required: 2000000ubnt")
   end
 
-  xit "creates key with symbols", :type => :feature do
-    #k = "#{@key1}#$%&"
-    k = "#{@key1} !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+  it "creates key with symbols", :type => :feature do
+    k = "#{@key1} !\"#$%&\'()*+,-.0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
     @client.create k, @value1, @gas_info
     keys = @client.keys
     expect(keys).to include(k)
