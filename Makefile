@@ -6,6 +6,9 @@ example:
 test:
 	@bundle exec rspec --format documentation --fail-fast $(o)
 
+test-all:
+	@bundle exec rspec --format documentation --fail-fast
+
 deploy:
 	@rm -f *.gem
 	@gem build bluzelle.gemspec
@@ -17,5 +20,6 @@ uat:
 
 .PHONY: example \
 	test \
+	test-all \
 	deploy \
 	uat

@@ -34,7 +34,7 @@ cd blzrb
 5. Install all the required dependencies including development related ones:
 
 ```
-sudo apt install libsecp256k1-dev
+sudo apt install -y libsecp256k1-dev
 bundle install
 ```
 
@@ -59,16 +59,13 @@ This example code performs simple CRUD operations against the testnet.
 8. The project also ships a complete suite of integration tests for all the methods. To run all the tests simply run:
 
 ```
-make test
+make test-all
 ```
 
 This will run all the tests in the `test` directory using the same environment settings defined in the `.env` file.
 Note that sometimes one or 2 tests fail due to some existing issues with the testnet. A successful run should however result in an output like this:
 
 ```
-...........................
-----------------------------------------------------------------------
-Ran 27 tests in 285.224s
-
-OK
+Finished in 5 minutes 19 seconds (files took 0.35147 seconds to load)
+34 examples, 0 failures, 0 pending
 ```
