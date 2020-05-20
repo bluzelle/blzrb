@@ -654,13 +654,8 @@ module Bluzelle
   end
 
   def self.encode_safe(s)
-    x = CGI.escape(s)
-    # x = URI.encode_www_form_component(s)
-    # x = URI::encode(s)
-    x.gsub(/([\#\?])/) { |token|
-      "%#{token[0].ord.to_s(16)}"
-    }
-    # puts "---> #{x}"
-    x
+    a = URI.escape(s)
+    b = a.gsub(/[\[\]\#\?]/) { |token| "%#{token[0].ord.to_s(16)}" }
+    b
   end
 end
