@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'bundler/setup'
 require 'json'
 require 'digest'
@@ -45,6 +43,7 @@ ADDRESS_MUST_BE_A_STRING = "address must be a string"
 MNEMONIC_MUST_BE_A_STRING = "mnemonic must be a string"
 UUID_MUST_BE_A_STRING = "uuid must be a string"
 INVALID_TRANSACTION = "Invalid transaction."
+KEY_CANNOT_CONTAIN_A_SLASH = "Key cannot contain a slash"
 
 module Bluzelle
   class OptionsError < StandardError
@@ -132,6 +131,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       if !value.instance_of? String
         raise APIError.new(VALUE_MUST_BE_A_STRING)
       end
@@ -156,6 +156,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       if !value.instance_of? String
         raise APIError.new(VALUE_MUST_BE_A_STRING)
       end
@@ -180,6 +181,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       send_transaction(
         "delete",
         "/crud/delete",
@@ -192,6 +194,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       if !new_key.instance_of? String
         raise APIError.new(NEW_KEY_MUST_BE_A_STRING)
       end
@@ -221,10 +224,11 @@ module Bluzelle
     end
 
     def renew_lease(key, gas_info, lease_info = nil)
-      payload = {"Key" => key}
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
+      payload = {"Key" => key}
       if lease_info != nil
         lease = Bluzelle::lease_info_to_blocks(lease_info)
         if lease < 0
@@ -265,6 +269,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       key = Bluzelle::encode_safe key
       if proof
         url = "/crud/pread/#{@options["uuid"]}/#{key}"
@@ -278,6 +283,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       key = Bluzelle::encode_safe key
       url = "/crud/has/#{@options["uuid"]}/#{key}"
       api_query(url)["result"]["has"]
@@ -302,6 +308,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       key = Bluzelle::encode_safe key
       url = "/crud/getlease/#{@options["uuid"]}/#{key}"
       Bluzelle::lease_blocks_to_seconds api_query(url)["result"]["lease"].to_i
@@ -325,6 +332,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       res = send_transaction("post", "/crud/read", {"Key" => key}, gas_info)
       res["value"]
     end
@@ -333,6 +341,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       res = send_transaction("post", "/crud/has", {"Key" => key}, gas_info)
       res["has"]
     end
@@ -356,6 +365,7 @@ module Bluzelle
       if !key.instance_of? String
         raise APIError.new(KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key key
       res = send_transaction("post", "/crud/getlease", {"Key" => key}, gas_info)
       Bluzelle::lease_blocks_to_seconds res["lease"].to_i
     end
@@ -653,8 +663,27 @@ module Bluzelle
   end
 
   def self.encode_safe(s)
-    a = URI.escape(s)
+    a = Bluzelle::escape(s)
     b = a.gsub(/[\[\]\#\?]/) { |token| "%#{token[0].ord.to_s(16)}" }
     b
+  end
+
+  # URI.escape is deprecated but its really just a gsub
+  # https://github.com/ruby/ruby/blob/ruby_2_7/lib/uri/rfc2396_parser.rb#L283:L313
+  def self.escape(str)
+    str.gsub(URI::UNSAFE) do
+      us = $&
+      tmp = ''
+      us.each_byte do |uc|
+        tmp << sprintf('%%%02X', uc)
+      end
+      tmp
+    end.force_encoding(Encoding::US_ASCII)
+  end
+
+  def self.validate_key(key)
+    if key.include? "/"
+      raise OptionsError, KEY_CANNOT_CONTAIN_A_SLASH
+    end
   end
 end
