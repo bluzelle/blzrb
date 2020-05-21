@@ -1,6 +1,6 @@
 ### User Acceptance Testing
 
-The following guide describes setting up the project and running an example code and tests in an Ubuntu 18.04 machine. Once ssh'd into the machine:
+The following guide describes setting up the project and running an example code and tests in an AWS Ubuntu 18.04 machine. Once ssh'ed into the machine:
 
 1. Ensure the system package index is up to date:
 
@@ -14,7 +14,7 @@ sudo apt -y update
 sudo apt install gnupg2 -y
 gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
 curl -sSL https://get.rvm.io | bash -s stable
-source /etc/profile.d/rvm.sh
+source /home/ubuntu/.rvm/scripts/rvm
 ```
 
 3. Install ruby 2.7.0 and activate it:
