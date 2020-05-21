@@ -198,6 +198,7 @@ module Bluzelle
       if !new_key.instance_of? String
         raise APIError.new(NEW_KEY_MUST_BE_A_STRING)
       end
+      Bluzelle::validate_key new_key
       send_transaction(
         "post",
         "/crud/rename",
