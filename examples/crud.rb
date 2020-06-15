@@ -23,7 +23,7 @@ gas_info = {
 }
 
 puts 'creating key'
-client.create key, value, gas_info, {"seconds" => 15}
+client.create key, value, gas_info, {"seconds" => 150000}
 puts 'created key'
 
 puts 'reading key'
