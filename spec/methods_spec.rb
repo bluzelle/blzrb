@@ -59,7 +59,7 @@ describe "methods" do
     @client.read k
   end
 
-  it "creates fails if key contains /", :type => :feature do
+  it "create fails if key contains /", :type => :feature do
     expect { @client.create "123/", @value1, @gas_info }.to raise_error(Bluzelle::OptionsError, "Key cannot contain a slash")
   end
 
