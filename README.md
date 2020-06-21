@@ -17,7 +17,7 @@ gem 'bluzelle', git: 'https://github.com/vbstreetz/blzrb'
 3. Then install:
 
 ```
-$ bundle install
+bundle install
 ```
 
 4. Use:
@@ -54,7 +54,7 @@ cp .env.sample .env
 Then run the example:
 
 ```
-    DEBUG=false LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby examples/crud.rb
+DEBUG=false LIBRESSL_REDIRECT_STUB_ABORT=0 bundle exec ruby examples/crud.rb
 ```
 
 ### Tests
@@ -62,7 +62,7 @@ Then run the example:
 Configure env as described in the examples section above.
 
 ```
-    bundle exec rspec --format documentation
+bundle exec rspec --format documentation
 ```
 
 ### User Acceptance Testing
