@@ -11,7 +11,7 @@ Ensure you have a recent version of [Ruby](https://www.ruby-lang.org/en/) instal
 ```
 gem 'money-tree', git: 'https://github.com/vbstreetz/money-tree'
 gem 'bitcoin-secp256k1', git: 'git@github.com:cryptape/ruby-bitcoin-secp256k1'
-gem 'bluzelle', git: 'https://github.com/vbstreetz/blzrb'
+gem 'bluzelle', git: 'https://github.com/bluzelle/blzrb'
 ```
 
 3. Then install:
@@ -67,7 +67,7 @@ bundle exec rspec --format documentation
 
 ### User Acceptance Testing
 
-Please checkout the [UAT.md](https://github.com/vbstreetz/blzrb/blob/master/UAT.md) document for more details.
+Please checkout the [UAT.md](https://github.com/bluzelle/blzrb/blob/master/UAT.md) document for more details.
 
 ### Abort 6 error
 
