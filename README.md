@@ -29,7 +29,7 @@ client = Bluzelle::new_client({
   "address" =>  "...",
   "mnemonic" => "...",
   "uuid" => "bluzelle",
-  "endpoint" => "http://testnet.public.bluzelle.com:1317",
+  "endpoint" => "http://dev.testnet.public.bluzelle.com:1317",
 })
 
 key = 'foo'
