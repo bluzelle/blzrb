@@ -4,8 +4,8 @@ Gem::Specification.new do |spec|
   spec.date        = '2020-04-20'
   spec.summary     = "Ruby gem client library for the Bluzelle Service"
   spec.description = "Ruby gem client library for the Bluzelle Service"
-  spec.authors     = ["vbstreetz"]
-  spec.email       = 'vbstreetz@gmail.com'
+  spec.authors     = ["bluzelle"]
+  spec.email       = 'hello@bluzelle.com'
   spec.files       = ["lib/bluzelle.rb"]
   spec.homepage    = 'https://rubygemspec.org/gems/bluzelle'
   spec.license     = 'MIT'

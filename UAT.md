@@ -33,7 +33,7 @@ gem install bundler -v 2.1.4
 5. Clone the project:
 
 ```
-git clone https://github.com/vbstreetz/blzrb.git
+git clone https://github.com/bluzelle/blzrb.git
 cd blzrb
 ```
 

@@ -6,7 +6,7 @@ GIT
       ffi (>= 1.9.25)
 
 GIT
-  remote: https://github.com/vbstreetz/money-tree
+  remote: https://github.com/bluzelle/money-tree
   revision: 244549cbc855b65c4a003ae1b089a0adc793f482
   specs:
     money-tree (0.10.0)
